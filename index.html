@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catch the Emoji</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #282c34;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #game-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            background-color: white;
+            border: 2px solid black;
+            overflow: hidden;
+        }
+        #dot {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            font-size: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .explode {
+            animation: explode 0.5s forwards;
+        }
+        @keyframes explode {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+        .piece {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            font-size: 20px;
+            opacity: 1;
+            animation: pieceAnimation 0.5s forwards;
+        }
+        @keyframes pieceAnimation {
+            0% {
+                transform: translate(0, 0);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--x), var(--y));
+                opacity: 0;
+            }
+        }
+        .glow {
+            box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.6);
+        }
+        .hidden {
+            display: none;
+        }
+        .warning {
+            background-color: #ff6347; /* Tomato red */
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>Catch the Emoji!</h1>
+        <p>Click the emoji as many times as you can in the set time!</p>
+        <p>Score: <span id="score">0</span></p>
+        <p>Time Left: <span id="timer">30</span> seconds</p>
+        
+        <div>
+            <label for="timeInput">Set Time (seconds):</label>
+            <input type="number" id="timeInput" value="30" min="1">
+        </div>
+        
+        <button onclick="startGame()">Start Game</button>
+        <div id="game-container">
+            <div id="dot">😀</div>
+        </div>
+        
+        <!-- Game Over Screen -->
+        <div id="gameOverScreen" class="hidden">
+            <h2>Game Over!</h2>
+            <p>Your final score: <span id="finalScore">0</span></p>
+            <p>Highest Score: <span id="highScore">0</span></p>
+            <button onclick="restartGame()">Restart Game</button>
+        </div>
+    </div>
+    
+    <!-- Sound Effects -->
+    <audio id="clickSound" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
+    <audio id="explodeSound" src="https://www.soundjay.com/button/beep-09.wav" preload="auto"></audio>
+
+    <script>
+        let score = 0;
+        let gameActive = false;
+        let timeLeft = 30;
+        let timer;
+        let countdown;
+        let level = 1; // Difficulty level
+        const emojis = ["😀", "😂", "🥳", "😎", "🤩", "😜", "🤖", "👽", "🐶", "🐱"];
+        const bonusEmojis = ["💎", "🔥", "🎉"]; // Bonus emojis with extra points
+        let highScore = localStorage.getItem('highScore') || 0; // Retrieve the highest score from localStorage
+
+        // Update high score on the game over screen
+        document.getElementById("highScore").innerText = highScore;
+
+        function moveDot() {
+            if (!gameActive) return;
+            const dot = document.getElementById("dot");
+            const container = document.getElementById("game-container");
+            const maxX = container.clientWidth - dot.clientWidth;
+            const maxY = container.clientHeight - dot.clientHeight;
+            const randomX = Math.floor(Math.random() * maxX);
+            const randomY = Math.floor(Math.random() * maxY);
+            dot.style.left = `${randomX}px`;
+            dot.style.top = `${randomY}px`;
+
+            // Randomly change the emoji
+            const emojiList = Math.random() < 0.1 ? emojis.concat(bonusEmojis) : emojis; // 10% chance to spawn bonus emoji
+            dot.innerText = emojiList[Math.floor(Math.random() * emojiList.length)];
+
+            // Increase speed as the game goes on
+            if (level < 5) {
+                level = Math.floor(timeLeft / 10) + 1; // Increase level based on time
+            }
+        }
+
+        function startGame() {
+            const customTime = document.getElementById("timeInput").value;
+            timeLeft = customTime;
+
+            if (timeLeft < 1) {
+                alert("Time must be at least 1 second.");
+                return;
+            }
+
+            score = 0;
+            document.getElementById("score").innerText = score;
+            document.getElementById("timer").innerText = timeLeft;
+            gameActive = true;
+            moveDot();
+
+            countdown = setInterval(() => {
+                timeLeft--;
+                document.getElementById("timer").innerText = timeLeft;
+                if (timeLeft <= 5) {
+                    document.body.classList.add('warning'); // Add warning style when time is low
+                }
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    endGame();
+                }
+            }, 1000);
+
+            timer = setTimeout(() => {
+                gameActive = false;
+                clearInterval(countdown);
+                endGame();
+            }, timeLeft * 1000); // Set the timer based on custom input time
+        }
+
+        function endGame() {
+            document.getElementById("finalScore").innerText = score;
+            // Update the high score in localStorage if the current score is higher
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('highScore', highScore);
+            }
+            document.getElementById("gameOverScreen").classList.remove("hidden");
+            document.getElementById("highScore").innerText = highScore;
+            document.body.classList.remove('warning'); // Remove warning style when game ends
+        }
+
+        function restartGame() {
+            document.getElementById("gameOverScreen").classList.add("hidden");
+            startGame();
+        }
+
+        function createExplosionEffect(dot) {
+            const container = document.getElementById("game-container");
+
+            for (let i = 0; i < 20; i++) {
+                const piece = document.createElement("div");
+                piece.classList.add("piece");
+
+                piece.style.left = `${dot.offsetLeft + dot.clientWidth / 2 - 10}px`;
+                piece.style.top = `${dot.offsetTop + dot.clientHeight / 2 - 10}px`;
+
+                piece.style.setProperty("--x", `${Math.random() * 200 - 100}px`);
+                piece.style.setProperty("--y", `${Math.random() * 200 - 100}px`);
+                piece.innerText = dot.innerText;
+
+                container.appendChild(piece);
+
+                setTimeout(() => {
+                    piece.remove();
+                }, 500); // Remove piece after animation ends
+            }
+
+            dot.classList.add("explode");
+            setTimeout(() => {
+                dot.classList.remove("explode");
+            }, 500);
+
+            // Play explosion sound
+            const explodeSound = document.getElementById("explodeSound");
+            explodeSound.play();
+        }
+
+        document.getElementById("dot").addEventListener("click", function() {
+            if (gameActive) {
+                score++;
+                document.getElementById("score").innerText = score;
+
+                // Play click sound
+                const clickSound = document.getElementById("clickSound");
+                clickSound.play();
+
+                // Trigger explosion effect
+                createExplosionEffect(this);
+
+                moveDot();
+            }
+        });
+    </script>
+</body>
+</html>
