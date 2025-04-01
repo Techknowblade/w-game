@@ -3,632 +3,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flappy Bird Emoji Game</title>
+    <title>Catch the Emoji</title>
     <style>
         body {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #87CEEB;
-            margin: 0;
-            overflow: hidden;
+            background-color: #282c34;
+            color: white;
             font-family: Arial, sans-serif;
+            text-align: center;
         }
-        .game-container {
+        #game-container {
             position: relative;
             width: 400px;
-            height: 600px;
-            background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%);
-            border: 4px solid #333;
-            border-radius: 8px;
+            height: 400px;
+            background-color: white;
+            border: 2px solid black;
             overflow: hidden;
-            box-shadow: 0 0 20px rgba(0,0,0,0.3);
         }
-        .bird {
+        #dot {
             position: absolute;
-            left: 100px;
             width: 40px;
             height: 40px;
-            font-size: 40px;
-            line-height: 40px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            transition: transform 0.1s;
-            display: none;
-            transform: scaleX(-1);
+            font-size: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
         }
-        .bird.jumping {
-            transform: scaleX(-1) rotate(-20deg);
+        .explode {
+            animation: explode 0.5s forwards;
         }
-        .bird.flapping {
-            animation: flap 0.3s infinite alternate;
+        @keyframes explode {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
         }
-        @keyframes flap {
-            0% { transform: scaleX(-1) rotate(0deg); }
-            100% { transform: scaleX(-1) rotate(10deg); }
-        }
-        .feather {
+        .piece {
             position: absolute;
             width: 20px;
             height: 20px;
             font-size: 20px;
-            line-height: 20px;
-            text-align: center;
-            z-index: 10;
-            pointer-events: none;
+            opacity: 1;
+            animation: pieceAnimation 0.5s forwards;
         }
-        .obstacle {
-            position: absolute;
-            width: 50px;
-            background: linear-gradient(to right, #4CAF50, #45a049);
-            border: 3px solid #2E7D32;
-            border-radius: 5px;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+        @keyframes pieceAnimation {
+            0% {
+                transform: translate(0, 0);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--x), var(--y));
+                opacity: 0;
+            }
         }
-        .obstacle.top {
-            border-bottom: none;
-            border-radius: 5px 5px 0 0;
+        .glow {
+            box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.6);
         }
-        .obstacle.bottom {
-            border-top: none;
-            border-radius: 0 0 5px 5px;
-        }
-        .coin, .power-up {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            font-size: 20px;
-            text-align: center;
-            line-height: 20px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-        }
-        .coin {
-            color: #FFD700;
-        }
-        .power-up {
-            color: #FF4500;
-        }
-        .score, .high-score, .difficulty {
-            position: absolute;
-            left: 10px;
-            font-size: 24px;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            z-index: 10;
+        .hidden {
             display: none;
-            background: rgba(0,0,0,0.2);
-            padding: 5px 10px;
-            border-radius: 5px;
         }
-        .score { top: 10px; }
-        .high-score { top: 45px; font-size: 18px; }
-        .difficulty { top: 75px; font-size: 16px; }
-        .start-screen {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            background: rgba(255,255,255,0.9);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.3);
-        }
-        .difficulty-buttons {
-            margin-top: 20px;
-        }
-        .difficulty-button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin: 5px;
-            background: linear-gradient(to right, #4CAF50, #45a049);
+        .warning {
+            background-color: #ff6347; /* Tomato red */
             color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        }
-        .difficulty-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 8px rgba(0,0,0,0.3);
-        }
-        .difficulty-button.selected {
-            background: linear-gradient(to right, #FFD700, #FFA500);
-            transform: scale(1.1);
-        }
-        .start-button {
-            padding: 15px 30px;
-            font-size: 20px;
-            margin-top: 20px;
-            background: linear-gradient(to right, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        }
-        .start-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 8px rgba(0,0,0,0.3);
-        }
-        .ground {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 50px;
-            background: linear-gradient(to bottom, #8B4513, #A0522D);
-            z-index: 5;
-            display: none;
-        }
-        .countdown {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 48px;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            z-index: 15;
-            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="game-container" id="gameContainer">
-        <div class="score" id="score">Score: 0</div>
-        <div class="high-score" id="highScore">High Score: 0</div>
-        <div class="difficulty" id="difficulty">Difficulty: Easy</div>
-        <div class="bird" id="bird">🐦</div>
-        <div class="ground" id="ground"></div>
-        <div class="start-screen" id="startScreen">
-            <h2>Flappy Bird</h2>
-            <div class="difficulty-buttons">
-                <button class="difficulty-button selected" data-difficulty="easy">Easy</button>
-                <button class="difficulty-button" data-difficulty="medium">Medium</button>
-                <button class="difficulty-button" data-difficulty="hard">Hard</button>
-            </div>
-            <button class="start-button" id="startButton">Start Game</button>
+    <div>
+        <h1>Catch the Emoji!</h1>
+        <p>Click the emoji as many times as you can in the set time!</p>
+        <p>Score: <span id="score">0</span></p>
+        <p>Time Left: <span id="timer">30</span> seconds</p>
+        
+        <div>
+            <label for="timeInput">Set Time (seconds):</label>
+            <input type="number" id="timeInput" value="30" min="1">
         </div>
-        <div class="countdown" id="countdown"></div>
+        
+        <button onclick="startGame()">Start Game</button>
+        <div id="game-container">
+            <div id="dot">😀</div>
+        </div>
+        
+        <!-- Game Over Screen -->
+        <div id="gameOverScreen" class="hidden">
+            <h2>Game Over!</h2>
+            <p>Your final score: <span id="finalScore">0</span></p>
+            <p>Highest Score: <span id="highScore">0</span></p>
+            <button onclick="restartGame()">Restart Game</button>
+        </div>
     </div>
+    
+    <!-- Sound Effects -->
+    <audio id="clickSound" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
+    <audio id="explodeSound" src="https://www.soundjay.com/button/beep-09.wav" preload="auto"></audio>
 
     <script>
-        const bird = document.getElementById("bird");
-        const gameContainer = document.getElementById("gameContainer");
-        const scoreDisplay = document.getElementById("score");
-        const highScoreDisplay = document.getElementById("highScore");
-        const difficultyDisplay = document.getElementById("difficulty");
-        const startScreen = document.getElementById("startScreen");
-        const startButton = document.getElementById("startButton");
-        const ground = document.getElementById("ground");
-        const countdownDisplay = document.getElementById("countdown");
-        const difficultyButtons = document.querySelectorAll(".difficulty-button");
-
-        let birdY = 300;
-        let gravity;
-        let velocity = 0;
-        let isGameOver = false;
-        let isGameStarted = false;
-        let isCountdownActive = false;
         let score = 0;
-        let highScore = localStorage.getItem('highScore') || 0;
-        let obstacleSpeed;
-        let obstacleFrequency;
-        let gameLoop;
-        let selectedDifficulty = "easy";
-        let hasShield = false;
-        let speedBoostActive = false;
-        let shrinkActive = false;
-        let originalBirdSize = { width: 40, height: 40, fontSize: 40 };
+        let gameActive = false;
+        let timeLeft = 30;
+        let timer;
+        let countdown;
+        let level = 1; // Difficulty level
+        const emojis = ["😀", "😂", "🥳", "😎", "🤩", "😜", "🤖", "👽", "🐶", "🐱"];
+        const bonusEmojis = ["💎", "🔥", "🎉"]; // Bonus emojis with extra points
+        let highScore = localStorage.getItem('highScore') || 0; // Retrieve the highest score from localStorage
 
-        // Sound effects
-        const jumpSound = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
-        const coinSound = new Audio('data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
-        const crashSound = new Audio('data:audio/wav;base64,UklGRjQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
-        const powerUpSound = new Audio('data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+        // Update high score on the game over screen
+        document.getElementById("highScore").innerText = highScore;
 
-        highScoreDisplay.innerText = `High Score: ${highScore}`;
+        function moveDot() {
+            if (!gameActive) return;
+            const dot = document.getElementById("dot");
+            const container = document.getElementById("game-container");
+            const maxX = container.clientWidth - dot.clientWidth;
+            const maxY = container.clientHeight - dot.clientHeight;
+            const randomX = Math.floor(Math.random() * maxX);
+            const randomY = Math.floor(Math.random() * maxY);
+            dot.style.left = `${randomX}px`;
+            dot.style.top = `${randomY}px`;
 
-        // Difficulty settings
-        const difficultySettings = {
-            easy: { gravity: 0.8, obstacleSpeed: 2, obstacleFrequency: 2000 },
-            medium: { gravity: 0.9, obstacleSpeed: 4, obstacleFrequency: 1500 },
-            hard: { gravity: 1.0, obstacleSpeed: 5, obstacleFrequency: 1200 }
-        };
+            // Randomly change the emoji
+            const emojiList = Math.random() < 0.1 ? emojis.concat(bonusEmojis) : emojis; // 10% chance to spawn bonus emoji
+            dot.innerText = emojiList[Math.floor(Math.random() * emojiList.length)];
 
-        // Power-up definitions
-        const powerUps = [
-            { type: "speed", emoji: "🚀", duration: 5000, effect: activateSpeedBoost },
-            { type: "shield", emoji: "🛡️", duration: 10000, effect: activateShield },
-            { type: "shrink", emoji: "🔍", duration: 7000, effect: activateShrink }
-        ];
-
-        // Handle difficulty selection
-        difficultyButtons.forEach(button => {
-            button.addEventListener("click", () => {
-                difficultyButtons.forEach(btn => btn.classList.remove("selected"));
-                button.classList.add("selected");
-                selectedDifficulty = button.dataset.difficulty;
-                difficultyDisplay.innerText = `Difficulty: ${selectedDifficulty.charAt(0).toUpperCase() + selectedDifficulty.slice(1)}`;
-            });
-        });
+            // Increase speed as the game goes on
+            if (level < 5) {
+                level = Math.floor(timeLeft / 10) + 1; // Increase level based on time
+            }
+        }
 
         function startGame() {
-            const settings = difficultySettings[selectedDifficulty];
-            gravity = settings.gravity;
-            obstacleSpeed = settings.obstacleSpeed;
-            obstacleFrequency = settings.obstacleFrequency;
+            const customTime = document.getElementById("timeInput").value;
+            timeLeft = customTime;
 
-            startScreen.style.display = "none";
-            bird.style.display = "block";
-            bird.style.top = birdY + "px";
-            scoreDisplay.style.display = "block";
-            highScoreDisplay.style.display = "block";
-            difficultyDisplay.style.display = "block";
-            ground.style.display = "block";
-            bird.classList.add("flapping");
-
-            // Start countdown
-            isCountdownActive = true;
-            countdownDisplay.style.display = "block";
-            let countdown = 3;
-            countdownDisplay.innerText = countdown;
-
-            const countdownInterval = setInterval(() => {
-                countdown--;
-                if (countdown > 0) {
-                    countdownDisplay.innerText = countdown;
-                } else {
-                    countdownDisplay.innerText = "Go!";
-                    setTimeout(() => {
-                        countdownDisplay.style.display = "none";
-                        isGameStarted = true;
-                        isCountdownActive = false;
-                        document.addEventListener("keydown", jump);
-                        gameLoop = setInterval(updateGame, 20);
-                        spawnObstacle();
-                    }, 500);
-                    clearInterval(countdownInterval);
-                }
-            }, 1000);
-        }
-
-        startButton.addEventListener("click", startGame);
-
-        function jump(event) {
-            if (event.code === "Space" && !isGameOver && isGameStarted && !isCountdownActive) {
-                velocity = speedBoostActive ? -15 : (selectedDifficulty === "easy" ? -8 : -12);
-                bird.classList.add("jumping");
-                jumpSound.play().catch(() => {});
-                setTimeout(() => bird.classList.remove("jumping"), 200);
-            }
-        }
-
-        function updateGame() {
-            if (!isGameStarted || isGameOver) return;
-
-            velocity += gravity;
-            birdY += velocity;
-            
-            if (birdY < 0) {
-                birdY = 0;
-                velocity = 0;
-            }
-            if (birdY > 550) {
-                triggerFeatherExplosion({ x: parseInt(bird.style.left), y: 550, isGround: true });
-                endGame();
+            if (timeLeft < 1) {
+                alert("Time must be at least 1 second.");
                 return;
             }
-            
-            bird.style.top = birdY + "px";
-            
-            checkCollisions();
-            updateScore();
-        }
 
-        function spawnObstacle() {
-            if (!isGameStarted || isGameOver) return;
+            score = 0;
+            document.getElementById("score").innerText = score;
+            document.getElementById("timer").innerText = timeLeft;
+            gameActive = true;
+            moveDot();
 
-            const gap = 150;
-            const minHeight = 50;
-            const maxHeight = 400;
-            const obstacleHeight = Math.random() * (maxHeight - minHeight) + minHeight;
-
-            const obstacleTop = document.createElement("div");
-            const obstacleBottom = document.createElement("div");
-            
-            obstacleTop.className = "obstacle top";
-            obstacleBottom.className = "obstacle bottom";
-            
-            obstacleTop.style.height = obstacleHeight + "px";
-            obstacleBottom.style.height = (600 - obstacleHeight - gap - 50) + "px";
-            
-            obstacleTop.style.top = "0px";
-            obstacleBottom.style.bottom = "50px";
-            
-            obstacleTop.style.left = "400px";
-            obstacleBottom.style.left = "400px";
-            
-            gameContainer.appendChild(obstacleTop);
-            gameContainer.appendChild(obstacleBottom);
-
-            if (Math.random() > 0.5) {
-                spawnCoin(obstacleHeight, gap);
-            }
-            if (Math.random() > 0.7) {
-                spawnPowerUp(obstacleHeight, gap);
-            }
-
-            function moveObstacle() {
-                if (!isGameStarted || isGameOver) {
-                    obstacleTop.remove();
-                    obstacleBottom.remove();
-                    return;
+            countdown = setInterval(() => {
+                timeLeft--;
+                document.getElementById("timer").innerText = timeLeft;
+                if (timeLeft <= 5) {
+                    document.body.classList.add('warning'); // Add warning style when time is low
                 }
-
-                let currentLeft = parseInt(obstacleTop.style.left);
-                currentLeft -= speedBoostActive ? obstacleSpeed * 1.5 : obstacleSpeed;
-                
-                if (currentLeft < -50) {
-                    obstacleTop.remove();
-                    obstacleBottom.remove();
-                } else {
-                    obstacleTop.style.left = currentLeft + "px";
-                    obstacleBottom.style.left = currentLeft + "px";
-                    requestAnimationFrame(moveObstacle);
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    endGame();
                 }
-            }
+            }, 1000);
 
-            requestAnimationFrame(moveObstacle);
-            setTimeout(spawnObstacle, obstacleFrequency);
-        }
-
-        function spawnCoin(obstacleHeight, gap) {
-            if (!isGameStarted || isGameOver) return;
-
-            const coin = document.createElement("div");
-            coin.className = "coin";
-            coin.innerHTML = "💰";
-            const coinY = obstacleHeight + (gap / 2) - 10;
-            coin.style.top = coinY + "px";
-            coin.style.left = "400px";
-            gameContainer.appendChild(coin);
-
-            function moveCoin() {
-                if (!isGameStarted || isGameOver) {
-                    coin.remove();
-                    return;
-                }
-
-                let currentLeft = parseInt(coin.style.left);
-                currentLeft -= speedBoostActive ? obstacleSpeed * 1.5 : obstacleSpeed;
-                
-                if (currentLeft < -20) {
-                    coin.remove();
-                } else {
-                    coin.style.left = currentLeft + "px";
-                    requestAnimationFrame(moveCoin);
-                }
-            }
-
-            requestAnimationFrame(moveCoin);
-        }
-
-        function spawnPowerUp(obstacleHeight, gap) {
-            if (!isGameStarted || isGameOver) return;
-
-            const powerUp = powerUps[Math.floor(Math.random() * powerUps.length)];
-            const powerUpElement = document.createElement("div");
-            powerUpElement.className = "power-up";
-            powerUpElement.innerHTML = powerUp.emoji;
-            powerUpElement.dataset.type = powerUp.type;
-            const powerUpY = obstacleHeight + (gap / 2) - 10;
-            powerUpElement.style.top = powerUpY + "px";
-            powerUpElement.style.left = "400px";
-            gameContainer.appendChild(powerUpElement);
-
-            function movePowerUp() {
-                if (!isGameStarted || isGameOver) {
-                    powerUpElement.remove();
-                    return;
-                }
-
-                let currentLeft = parseInt(powerUpElement.style.left);
-                currentLeft -= speedBoostActive ? obstacleSpeed * 1.5 : obstacleSpeed;
-                
-                if (currentLeft < -20) {
-                    powerUpElement.remove();
-                } else {
-                    powerUpElement.style.left = currentLeft + "px";
-                    requestAnimationFrame(movePowerUp);
-                }
-            }
-
-            requestAnimationFrame(movePowerUp);
-        }
-
-        function checkCollisions() {
-            const birdRect = bird.getBoundingClientRect();
-            const obstacles = document.querySelectorAll('.obstacle');
-            const coins = document.querySelectorAll('.coin');
-            const powerUpElements = document.querySelectorAll('.power-up'); // Renamed to avoid conflict
-            
-            obstacles.forEach(obstacle => {
-                const obsRect = obstacle.getBoundingClientRect();
-                if (birdRect.left < obsRect.right &&
-                    birdRect.right > obsRect.left &&
-                    birdRect.top < obsRect.bottom &&
-                    birdRect.bottom > obsRect.top) {
-                    crashSound.play().catch(() => {});
-                    let collisionX, collisionY;
-                    if (birdRect.right > obsRect.left && birdRect.left < obsRect.left) {
-                        collisionX = obsRect.left;
-                    } else {
-                        collisionX = obsRect.right;
-                    }
-                    if (obstacle.classList.contains("top")) {
-                        collisionY = obsRect.bottom;
-                    } else {
-                        collisionY = obsRect.top;
-                    }
-                    if (hasShield) {
-                        hasShield = false;
-                        bird.style.backgroundColor = "transparent";
-                        obstacle.remove(); // Remove the obstacle when shield is active
-                    } else {
-                        triggerFeatherExplosion({ 
-                            x: collisionX - 20, 
-                            y: collisionY - 20, 
-                            obstacle: obstacle 
-                        });
-                        endGame();
-                    }
-                }
-            });
-
-            coins.forEach(coin => {
-                const coinRect = coin.getBoundingClientRect();
-                if (birdRect.left < coinRect.right &&
-                    birdRect.right > coinRect.left &&
-                    birdRect.top < coinRect.bottom &&
-                    birdRect.bottom > coinRect.top) {
-                    coinSound.play().catch(() => {});
-                    coin.remove();
-                    score += 5;
-                    scoreDisplay.innerText = `Score: ${score}`;
-                }
-            });
-
-            powerUpElements.forEach(powerUpElement => {
-                const powerUpRect = powerUpElement.getBoundingClientRect();
-                if (birdRect.left < powerUpRect.right &&
-                    birdRect.right > powerUpRect.left &&
-                    birdRect.top < powerUpRect.bottom &&
-                    birdRect.bottom > powerUpRect.top) {
-                    powerUpSound.play().catch(() => {});
-                    const powerUp = powerUps.find(p => p.type === powerUpElement.dataset.type);
-                    if (powerUp) { // Ensure powerUp exists before calling effect
-                        powerUp.effect(powerUp.duration);
-                        powerUpElement.remove();
-                        score += 10;
-                        scoreDisplay.innerText = `Score: ${score}`;
-                    }
-                }
-            });
-        }
-
-        function updateScore() {
-            const birdRect = bird.getBoundingClientRect();
-            const obstacles = document.querySelectorAll('.obstacle');
-            
-            obstacles.forEach(obstacle => {
-                const obsRect = obstacle.getBoundingClientRect();
-                if (obsRect.right < birdRect.left && !obstacle.scored) {
-                    obstacle.scored = true;
-                    score++;
-                    scoreDisplay.innerText = `Score: ${score}`;
-                    
-                    if (score > highScore) {
-                        highScore = score;
-                        highScoreDisplay.innerText = `High Score: ${highScore}`;
-                        localStorage.setItem('highScore', highScore);
-                    }
-                }
-            });
-        }
-
-        function triggerFeatherExplosion(collisionPoint) {
-            bird.style.display = "none";
-            const featherCount = 8;
-
-            const containerRect = gameContainer.getBoundingClientRect();
-            let explosionX, explosionY;
-
-            if (collisionPoint.obstacle) {
-                const obsRect = collisionPoint.obstacle.getBoundingClientRect();
-                explosionX = (obsRect.left + obsRect.right) / 2 - containerRect.left;
-                explosionY = collisionPoint.y;
-            } else if (collisionPoint.isGround) {
-                explosionX = collisionPoint.x;
-                explosionY = collisionPoint.y;
-            }
-
-            for (let i = 0; i < featherCount; i++) {
-                const feather = document.createElement("div");
-                feather.className = "feather";
-                feather.innerHTML = "🪶";
-                feather.style.left = explosionX + "px";
-                feather.style.top = explosionY + "px";
-                gameContainer.appendChild(feather);
-
-                const angle = (Math.random() * Math.PI) - (Math.PI / 2);
-                const distance = 50 + Math.random() * 50;
-                const duration = 0.7 + Math.random() * 0.3;
-
-                const x = Math.cos(angle) * distance;
-                const y = Math.sin(angle) * distance;
-
-                feather.animate([
-                    { transform: "translate(0, 0) rotate(0deg)", opacity: 1 },
-                    { transform: `translate(${x}px, ${y}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }
-                ], {
-                    duration: duration * 1000,
-                    easing: "ease-out",
-                    fill: "forwards"
-                });
-
-                setTimeout(() => feather.remove(), duration * 1000);
-            }
-        }
-
-        function activateSpeedBoost(duration) {
-            speedBoostActive = true;
-            bird.style.color = "#FF4500";
-            setTimeout(() => {
-                speedBoostActive = false;
-                bird.style.color = "inherit";
-            }, duration);
-        }
-
-        function activateShield(duration) {
-            hasShield = true;
-            bird.style.backgroundColor = "rgba(255, 215, 0, 0.3)";
-            setTimeout(() => {
-                hasShield = false;
-                bird.style.backgroundColor = "transparent";
-            }, duration);
-        }
-
-        function activateShrink(duration) {
-            shrinkActive = true;
-            bird.style.width = "20px";
-            bird.style.height = "20px";
-            bird.style.fontSize = "20px";
-            bird.style.lineHeight = "20px";
-            setTimeout(() => {
-                shrinkActive = false;
-                bird.style.width = originalBirdSize.width + "px";
-                bird.style.height = originalBirdSize.height + "px";
-                bird.style.fontSize = originalBirdSize.fontSize + "px";
-                bird.style.lineHeight = originalBirdSize.height + "px";
-            }, duration);
+            timer = setTimeout(() => {
+                gameActive = false;
+                clearInterval(countdown);
+                endGame();
+            }, timeLeft * 1000); // Set the timer based on custom input time
         }
 
         function endGame() {
-            if (!isGameOver) {
-                isGameOver = true;
-                bird.classList.remove("flapping");
-                clearInterval(gameLoop);
-                setTimeout(() => {
-                    alert(`Game Over!\nScore: ${score}\nHigh Score: ${highScore}`);
-                    location.reload();
-                }, 1000);
+            document.getElementById("finalScore").innerText = score;
+            // Update the high score in localStorage if the current score is higher
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('highScore', highScore);
             }
+            document.getElementById("gameOverScreen").classList.remove("hidden");
+            document.getElementById("highScore").innerText = highScore;
+            document.body.classList.remove('warning'); // Remove warning style when game ends
         }
+
+        function restartGame() {
+            document.getElementById("gameOverScreen").classList.add("hidden");
+            startGame();
+        }
+
+        function createExplosionEffect(dot) {
+            const container = document.getElementById("game-container");
+
+            for (let i = 0; i < 20; i++) {
+                const piece = document.createElement("div");
+                piece.classList.add("piece");
+
+                piece.style.left = `${dot.offsetLeft + dot.clientWidth / 2 - 10}px`;
+                piece.style.top = `${dot.offsetTop + dot.clientHeight / 2 - 10}px`;
+
+                piece.style.setProperty("--x", `${Math.random() * 200 - 100}px`);
+                piece.style.setProperty("--y", `${Math.random() * 200 - 100}px`);
+                piece.innerText = dot.innerText;
+
+                container.appendChild(piece);
+
+                setTimeout(() => {
+                    piece.remove();
+                }, 500); // Remove piece after animation ends
+            }
+
+            dot.classList.add("explode");
+            setTimeout(() => {
+                dot.classList.remove("explode");
+            }, 500);
+
+            // Play explosion sound
+            const explodeSound = document.getElementById("explodeSound");
+            explodeSound.play();
+        }
+
+        document.getElementById("dot").addEventListener("click", function() {
+            if (gameActive) {
+                score++;
+                document.getElementById("score").innerText = score;
+
+                // Play click sound
+                const clickSound = document.getElementById("clickSound");
+                clickSound.play();
+
+                // Trigger explosion effect
+                createExplosionEffect(this);
+
+                moveDot();
+            }
+        });
     </script>
 </body>
 </html>
