@@ -9,19 +9,24 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background-color: #282c34;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #282c34, #1a1e25);
             color: white;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
             text-align: center;
+            margin: 0;
+            padding: 20px;
+            transition: all 0.5s ease;
         }
         #game-container {
             position: relative;
             width: 400px;
             height: 400px;
-            background-color: white;
-            border: 2px solid black;
+            background: linear-gradient(45deg, #ffffff, #f0f0f0);
+            border-radius: 15px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
             overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
         #dot {
             position: absolute;
@@ -32,20 +37,21 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+        }
+        #dot:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.5);
         }
         .explode {
-            animation: explode 0.5s forwards;
+            animation: explode 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
         @keyframes explode {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(3);
-                opacity: 0;
-            }
+            0% { transform: scale(1) rotate(0deg); opacity: 1; }
+            50% { transform: scale(2.5) rotate(15deg); opacity: 0.7; }
+            100% { transform: scale(3) rotate(0deg); opacity: 0; }
         }
         .piece {
             position: absolute;
@@ -53,34 +59,90 @@
             height: 20px;
             font-size: 20px;
             opacity: 1;
-            animation: pieceAnimation 0.5s forwards;
+            animation: pieceAnimation 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
         @keyframes pieceAnimation {
-            0% {
-                transform: translate(0, 0);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(var(--x), var(--y));
-                opacity: 0;
-            }
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(var(--x), var(--y)) rotate(var(--rotate)); opacity: 0; }
         }
-        .glow {
-            box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.6);
+        .rainbow {
+            background: linear-gradient(45deg, red, orange, yellow, green, blue, purple);
+            animation: rainbowShift 3s infinite;
         }
-        .hidden {
-            display: none;
+        @keyframes rainbowShift {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
         }
+        .falling-emoji {
+            position: absolute;
+            font-size: 24px;
+            animation: fall 2s linear forwards;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-100vh) rotate(0deg); }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+        .large-emoji {
+            position: absolute;
+            font-size: 80px;
+            animation: fade 3s ease forwards;
+            z-index: 999;
+        }
+        @keyframes fade {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+            100% { opacity: 0; transform: scale(1); }
+        }
+        #giant-sus {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 200px;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+            cursor: pointer;
+        }
+        .hidden { display: none; }
         .warning {
-            background-color: #ff6347; /* Tomato red */
+            background: linear-gradient(135deg, #ff6347, #ff4500);
+            transition: background 0.3s ease;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin: 0.5em 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        p { margin: 0.5em 0; font-size: 1.1em; }
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            background: #4CAF50;
             color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        input[type="number"] {
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 60px;
         }
     </style>
 </head>
 <body>
     <div>
         <h1>Catch the Emoji!</h1>
-        <p>Click the emoji as many times as you can in the set time!</p>
+        <p>Click the emoji as many times as you can!</p>
         <p>Score: <span id="score">0</span></p>
         <p>Time Left: <span id="timer">30</span> seconds</p>
         
@@ -94,16 +156,15 @@
             <div id="dot">😀</div>
         </div>
         
-        <!-- Game Over Screen -->
         <div id="gameOverScreen" class="hidden">
             <h2>Game Over!</h2>
             <p>Your final score: <span id="finalScore">0</span></p>
             <p>Highest Score: <span id="highScore">0</span></p>
             <button onclick="restartGame()">Restart Game</button>
         </div>
+        <div id="giant-sus" class="hidden">🤨</div>
     </div>
     
-    <!-- Sound Effects -->
     <audio id="clickSound" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
     <audio id="explodeSound" src="https://www.soundjay.com/button/beep-09.wav" preload="auto"></audio>
 
@@ -113,12 +174,11 @@
         let timeLeft = 30;
         let timer;
         let countdown;
-        let level = 1; // Difficulty level
-        const emojis = ["😀", "😂", "🥳", "😎", "🤩", "😜", "🤖", "👽", "🐶", "🐱"];
-        const bonusEmojis = ["💎", "🔥", "🎉"]; // Bonus emojis with extra points
-        let highScore = localStorage.getItem('highScore') || 0; // Retrieve the highest score from localStorage
-
-        // Update high score on the game over screen
+        let level = 1;
+        let giantSusActive = false; // Track if the giant emoji is active for scoring
+        const emojis = ["😀", "😂", "🥳", "😎", "🤩", "😜", "🤖", "👽", "🐶", "🐱", "🤨"];
+        const bonusEmojis = ["💎", "🔥", "🎉"];
+        let highScore = localStorage.getItem('highScore') || 0;
         document.getElementById("highScore").innerText = highScore;
 
         function moveDot() {
@@ -132,13 +192,11 @@
             dot.style.left = `${randomX}px`;
             dot.style.top = `${randomY}px`;
 
-            // Randomly change the emoji
-            const emojiList = Math.random() < 0.1 ? emojis.concat(bonusEmojis) : emojis; // 10% chance to spawn bonus emoji
+            const emojiList = Math.random() < 0.1 ? emojis.concat(bonusEmojis) : emojis;
             dot.innerText = emojiList[Math.floor(Math.random() * emojiList.length)];
 
-            // Increase speed as the game goes on
             if (level < 5) {
-                level = Math.floor(timeLeft / 10) + 1; // Increase level based on time
+                level = Math.floor(timeLeft / 10) + 1;
             }
         }
 
@@ -161,7 +219,7 @@
                 timeLeft--;
                 document.getElementById("timer").innerText = timeLeft;
                 if (timeLeft <= 5) {
-                    document.body.classList.add('warning'); // Add warning style when time is low
+                    document.body.classList.add('warning');
                 }
                 if (timeLeft <= 0) {
                     clearInterval(countdown);
@@ -173,19 +231,22 @@
                 gameActive = false;
                 clearInterval(countdown);
                 endGame();
-            }, timeLeft * 1000); // Set the timer based on custom input time
+            }, timeLeft * 1000);
         }
 
         function endGame() {
             document.getElementById("finalScore").innerText = score;
-            // Update the high score in localStorage if the current score is higher
             if (score > highScore) {
                 highScore = score;
                 localStorage.setItem('highScore', highScore);
             }
             document.getElementById("gameOverScreen").classList.remove("hidden");
             document.getElementById("highScore").innerText = highScore;
-            document.body.classList.remove('warning'); // Remove warning style when game ends
+            document.body.classList.remove('warning', 'rainbow');
+            document.getElementById("giant-sus").classList.add("hidden");
+            giantSusActive = false; // Reset giant emoji state
+            clearFallingEmojis();
+            clearLargeEmojis();
         }
 
         function restartGame() {
@@ -195,48 +256,107 @@
 
         function createExplosionEffect(dot) {
             const container = document.getElementById("game-container");
-
             for (let i = 0; i < 20; i++) {
                 const piece = document.createElement("div");
                 piece.classList.add("piece");
-
                 piece.style.left = `${dot.offsetLeft + dot.clientWidth / 2 - 10}px`;
                 piece.style.top = `${dot.offsetTop + dot.clientHeight / 2 - 10}px`;
-
-                piece.style.setProperty("--x", `${Math.random() * 200 - 100}px`);
-                piece.style.setProperty("--y", `${Math.random() * 200 - 100}px`);
+                const angle = Math.random() * 360;
+                const distance = Math.random() * 100 + 50;
+                const x = Math.cos(angle) * distance;
+                const y = Math.sin(angle) * distance;
+                piece.style.setProperty("--x", `${x}px`);
+                piece.style.setProperty("--y", `${y}px`);
+                piece.style.setProperty("--rotate", `${Math.random() * 720 - 360}deg`);
                 piece.innerText = dot.innerText;
-
                 container.appendChild(piece);
-
-                setTimeout(() => {
-                    piece.remove();
-                }, 500); // Remove piece after animation ends
+                setTimeout(() => piece.remove(), 600);
             }
-
             dot.classList.add("explode");
-            setTimeout(() => {
-                dot.classList.remove("explode");
-            }, 500);
-
-            // Play explosion sound
+            setTimeout(() => dot.classList.remove("explode"), 500);
             const explodeSound = document.getElementById("explodeSound");
             explodeSound.play();
         }
 
+        function triggerRainbowEffect() {
+            document.body.classList.add("rainbow");
+            const giantSus = document.getElementById("giant-sus");
+            giantSus.classList.remove("hidden");
+            giantSusActive = true; // Enable scoring for the giant emoji
+            spawnFallingEmojis();
+            spawnLargeEmojis();
+            setTimeout(() => {
+                document.body.classList.remove("rainbow");
+                giantSus.classList.add("hidden");
+                giantSusActive = false; // Disable scoring when the effect ends
+                clearFallingEmojis();
+                clearLargeEmojis();
+            }, 5000); // Effect lasts 5 seconds
+        }
+
+        function spawnFallingEmojis() {
+            const susEmojis = ["🍑", "🫦", "💦", "🍒", "🍌", "🍆"];
+            for (let i = 0; i < 30; i++) {
+                const emoji = document.createElement("div");
+                emoji.classList.add("falling-emoji");
+                emoji.innerText = susEmojis[Math.floor(Math.random() * susEmojis.length)];
+                emoji.style.left = `${Math.random() * 100}vw`;
+                emoji.style.animationDelay = `${Math.random() * 1}s`;
+                document.body.appendChild(emoji);
+                setTimeout(() => emoji.remove(), 2000);
+            }
+        }
+
+        function spawnLargeEmojis() {
+            const susEmojis = ["🍑", "🫦", "💦", "🍒", "🍌", "🍆"];
+            for (let i = 0; i < 10; i++) {
+                const emoji = document.createElement("div");
+                emoji.classList.add("large-emoji");
+                emoji.innerText = susEmojis[Math.floor(Math.random() * susEmojis.length)];
+                emoji.style.left = `${Math.random() * 80 + 10}vw`;
+                emoji.style.top = `${Math.random() * 80 + 10}vh`;
+                document.body.appendChild(emoji);
+                setTimeout(() => emoji.remove(), 3000);
+            }
+        }
+
+        function clearFallingEmojis() {
+            document.querySelectorAll(".falling-emoji").forEach(emoji => emoji.remove());
+        }
+
+        function clearLargeEmojis() {
+            document.querySelectorAll(".large-emoji").forEach(emoji => emoji.remove());
+        }
+
+        // Click event for the small dot emoji
         document.getElementById("dot").addEventListener("click", function() {
             if (gameActive) {
-                score++;
+                if (this.innerText === "🤨") {
+                    triggerRainbowEffect();
+                    score += 10; // Bonus points for sus emoji
+                } else {
+                    score++;
+                }
                 document.getElementById("score").innerText = score;
-
-                // Play click sound
                 const clickSound = document.getElementById("clickSound");
                 clickSound.play();
-
-                // Trigger explosion effect
                 createExplosionEffect(this);
+                setTimeout(moveDot, 100);
+            }
+        });
 
-                moveDot();
+        // Click event for the giant sus emoji
+        document.getElementById("giant-sus").addEventListener("click", function() {
+            if (giantSusActive) {
+                // Change to moaning emoji on first click
+                if (this.innerText === "🤨") {
+                    this.innerText = "😩";
+                }
+                // Increase score on each click
+                score += 5; // 5 points per click on the giant emoji
+                document.getElementById("score").innerText = score;
+                const clickSound = document.getElementById("clickSound");
+                clickSound.play();
             }
         });
     </script>
