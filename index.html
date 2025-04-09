@@ -18,8 +18,68 @@
             padding: 20px;
             transition: all 0.5s ease;
         }
-        #game-wrapper {
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ff0066, #00ffcc);
             display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            transition: opacity 0.5s ease;
+        }
+        #loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #loading-title {
+            font-size: 4em;
+            background: linear-gradient(45deg, #ffcc00, #ff3385);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 5px 15px rgba(255, 204, 0, 0.6);
+            animation: bounce 1s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        #loading-bar {
+            width: 300px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+            position: relative;
+        }
+        #loading-progress {
+            width: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #ffcc00, #ff3385);
+            transition: width 0.1s linear;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+        }
+        #loading-progress::after {
+            content: "😊👍";
+            font-size: 16px;
+            position: absolute;
+            right: 10px;
+        }
+        #mode-selection {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        #game-wrapper {
+            display: none;
             flex-direction: column;
             align-items: center;
             width: 100%;
@@ -71,13 +131,14 @@
             0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
             100% { transform: translate(var(--x), var(--y)) rotate(var(--rotate)); opacity: 0; }
         }
-        .rainbow {
-            background: linear-gradient(45deg, red, orange, yellow, green, blue, purple);
-            animation: rainbowShift 3s infinite;
+        .gold {
+            background: linear-gradient(45deg, #ffd700, #ffaa00);
+            animation: goldShimmer 2s infinite;
         }
-        @keyframes rainbowShift {
-            0% { filter: hue-rotate(0deg); }
-            100% { filter: hue-rotate(360deg); }
+        @keyframes goldShimmer {
+            0% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+            100% { filter: brightness(1); }
         }
         .falling-emoji {
             position: absolute;
@@ -99,15 +160,39 @@
             50% { opacity: 0.7; transform: scale(1.2); }
             100% { opacity: 0; transform: scale(1); }
         }
-        #giant-sus {
+        #settings-menu {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 200px;
-            z-index: 1000;
-            transition: opacity 0.5s ease;
-            cursor: pointer;
+            top: 10px;
+            left: 10px;
+            z-index: 1001;
+        }
+        #settings-button {
+            background: linear-gradient(45deg, #00ffcc, #ff99cc);
+            padding: 8px 15px;
+            font-size: 1em;
+        }
+        #settings-panel {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+        #settings-panel select {
+            margin: 5px 0;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #00ffcc;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+        }
+        #back-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(45deg, #ff3385, #ffcc00);
         }
         .hidden { display: none; }
         .warning {
@@ -147,7 +232,6 @@
         button {
             padding: 12px 25px;
             font-size: 1.2em;
-            background: linear-gradient(45deg, #ff0066, #ffcc00);
             color: white;
             border: none;
             border-radius: 8px;
@@ -158,9 +242,20 @@
             margin: 5px;
         }
         button:hover {
-            background: linear-gradient(45deg, #ff3385, #ffe066);
             transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(255, 51, 133, 0.5);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+        }
+        .neon-classic {
+            background: linear-gradient(45deg, #00ff00, #66ff66);
+            text-shadow: 0 0 10px #00ff00;
+        }
+        .neon-normal {
+            background: linear-gradient(45deg, #ff00ff, #ff66ff);
+            text-shadow: 0 0 10px #ff00ff;
+        }
+        .neon-adventure {
+            background: linear-gradient(45deg, #00ffff, #66ffff);
+            text-shadow: 0 0 10px #00ffff;
         }
         input[type="number"] {
             padding: 6px;
@@ -176,10 +271,42 @@
             color: #ff99cc;
             text-shadow: 0 2px 4px rgba(255, 153, 204, 0.4);
         }
+        .theme-retro { background: linear-gradient(135deg, #ff4040, #4040ff); font-family: 'Courier New', monospace; }
+        .theme-cyber { background: linear-gradient(135deg, #0f0f0f, #00ff00); font-family: 'Orbitron', sans-serif; }
+        .theme-pastel { background: linear-gradient(135deg, #ffb6c1, #87ceeb); font-family: 'Comic Sans MS', cursive; }
+        .theme-dark { background: linear-gradient(135deg, #1a1a1a, #333333); font-family: 'Gothic', sans-serif; }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div id="loading-screen">
+        <h1 id="loading-title">Em😊ji Game!</h1>
+        <div id="loading-bar">
+            <div id="loading-progress"></div>
+        </div>
+    </div>
+
+    <div id="mode-selection">
+        <h1>Choose Your Mode!</h1>
+        <button class="neon-classic" onclick="selectMode('classic')">Classic Rush</button>
+        <button class="neon-normal" onclick="selectMode('normal')">Launch the Madness</button>
+        <button class="neon-adventure" onclick="selectMode('adventure')">Adventure Mode</button>
+    </div>
+
     <div id="game-wrapper">
+        <div id="settings-menu">
+            <button id="settings-button">Settings</button>
+            <div id="settings-panel" class="hidden">
+                <select id="theme-select" onchange="changeTheme()">
+                    <option value="default">Default</option>
+                    <option value="retro">Retro</option>
+                    <option value="cyber">Cyber</option>
+                    <option value="pastel">Pastel</option>
+                    <option value="dark">Dark</option>
+                </select>
+            </div>
+        </div>
+        <button id="back-button" onclick="backToModes()">Back to Modes</button>
         <h1>Emoji Hunt Showdown</h1>
         <p>Smash those emojis like a pro!</p>
         <p>Score: <span id="score">0</span></p>
@@ -189,10 +316,8 @@
             <label for="timeInput">Set the Clock:</label>
             <input type="number" id="timeInput" value="30" min="1">
         </div>
+        <button onclick="startGame()">Start</button>
         
-        <button onclick="startGame('classic')">Classic Rush</button>
-        <button onclick="startGame('normal')">Launch the Madness</button>
-        <button onclick="startGame('adventure')">Adventure Mode</button>
         <div id="game-container"></div>
         
         <div id="gameOverScreen" class="hidden">
@@ -201,7 +326,6 @@
             <p>Top Score: <span id="highScore">0</span></p>
             <button onclick="restartGame()">Replay the Chaos</button>
         </div>
-        <div id="giant-sus" class="hidden">🤨</div>
     </div>
     
     <audio id="clickSound" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
@@ -214,21 +338,86 @@
         let timer;
         let countdown;
         let level = 1;
-        let giantSusActive = false;
         let gameMode = 'normal';
         let emojiCount = 3;
-        const emojis = ["😀", "😂", "🥳", "😎", "🤩", "😜", "🤖", "👽", "🐶", "🐱", "🤨"];
+        const emojis = ["😀", "😂", "🥳", "😎", "🤩", "😜", "🤖", "👽", "🐶", "🐱"];
         const bonusEmojis = ["💎", "🔥", "🎉"];
         const penaltyEmojis = ["💀", "👎", "😡"];
         const endGameEmojis = ["☠️", "💣"];
+        const specialEmojis = {
+            "💰": { points: 15, effect: triggerGoldRush },
+            "🌈": { points: 10, effect: triggerRainbowEffect },
+            "⚡": { points: 20, effect: triggerLightning },
+            "🌀": { points: 12, effect: triggerSpinEffect }
+        };
         let highScore = localStorage.getItem('highScore') || 0;
         document.getElementById("highScore").innerText = highScore;
+
+        // Loading Screen
+        window.onload = function() {
+            let progress = 0;
+            const loadingBar = document.getElementById("loading-progress");
+            const loadingScreen = document.getElementById("loading-screen");
+            const modeSelection = document.getElementById("mode-selection");
+
+            const loadingInterval = setInterval(() => {
+                progress += 5;
+                loadingBar.style.width = `${progress}%`;
+                if (progress >= 100) {
+                    clearInterval(loadingInterval);
+                    setTimeout(() => {
+                        loadingScreen.classList.add("hidden");
+                        modeSelection.style.display = "flex";
+                    }, 500);
+                }
+            }, 100);
+        };
+
+        // Settings Menu
+        document.getElementById("settings-button").addEventListener("click", () => {
+            const panel = document.getElementById("settings-panel");
+            if (panel.style.display === "block") {
+                panel.style.display = "none";
+            } else {
+                panel.style.display = "block";
+            }
+        });
+
+        function changeTheme() {
+            const theme = document.getElementById("theme-select").value;
+            document.body.classList.remove("theme-retro", "theme-cyber", "theme-pastel", "theme-dark");
+            if (theme !== "default") {
+                document.body.classList.add(`theme-${theme}`);
+            } else {
+                document.body.style.background = "linear-gradient(135deg, #282c34, #1a1e25)";
+                document.body.style.fontFamily = "'Segoe UI', Arial, sans-serif";
+            }
+        }
+
+        function selectMode(mode) {
+            gameMode = mode;
+            document.getElementById("mode-selection").style.display = "none";
+            document.getElementById("game-wrapper").style.display = "flex";
+            document.getElementById("gameOverScreen").classList.add("hidden");
+            score = 0;
+            document.getElementById("score").innerText = score;
+            document.getElementById("timer").innerText = mode === 'adventure' ? "∞" : document.getElementById("timeInput").value;
+        }
+
+        function backToModes() {
+            document.getElementById("game-wrapper").style.display = "none";
+            document.getElementById("mode-selection").style.display = "flex";
+            gameActive = false;
+            clearInterval(countdown);
+            clearTimeout(timer);
+            document.body.classList.remove('warning', 'gold');
+        }
 
         function spawnEmojis() {
             if (!gameActive) return;
             const container = document.getElementById("game-container");
             container.innerHTML = '';
-            const allEmojis = [...emojis, ...bonusEmojis, ...penaltyEmojis, ...endGameEmojis];
+            const allEmojis = [...emojis, ...bonusEmojis, ...penaltyEmojis, ...endGameEmojis, ...Object.keys(specialEmojis)];
 
             if (gameMode === 'classic') {
                 const dot = document.createElement("div");
@@ -241,10 +430,11 @@
                 dot.style.top = `${randomY}px`;
                 const rand = Math.random();
                 let emoji;
-                if (rand < 0.6) emoji = emojis[Math.floor(Math.random() * emojis.length)];
-                else if (rand < 0.75) emoji = bonusEmojis[Math.floor(Math.random() * bonusEmojis.length)];
-                else if (rand < 0.9) emoji = penaltyEmojis[Math.floor(Math.random() * penaltyEmojis.length)];
-                else emoji = endGameEmojis[Math.floor(Math.random() * endGameEmojis.length)];
+                if (rand < 0.5) emoji = emojis[Math.floor(Math.random() * emojis.length)];
+                else if (rand < 0.65) emoji = bonusEmojis[Math.floor(Math.random() * bonusEmojis.length)];
+                else if (rand < 0.8) emoji = penaltyEmojis[Math.floor(Math.random() * penaltyEmojis.length)];
+                else if (rand < 0.9) emoji = endGameEmojis[Math.floor(Math.random() * endGameEmojis.length)];
+                else emoji = Object.keys(specialEmojis)[Math.floor(Math.random() * Object.keys(specialEmojis).length)];
                 dot.innerText = emoji;
                 dot.addEventListener("click", handleEmojiClick);
                 container.appendChild(dot);
@@ -262,10 +452,11 @@
 
                     const rand = Math.random();
                     let emoji;
-                    if (rand < 0.6) emoji = emojis[Math.floor(Math.random() * emojis.length)];
-                    else if (rand < 0.75) emoji = bonusEmojis[Math.floor(Math.random() * bonusEmojis.length)];
-                    else if (rand < 0.9) emoji = penaltyEmojis[Math.floor(Math.random() * penaltyEmojis.length)];
-                    else emoji = endGameEmojis[Math.floor(Math.random() * endGameEmojis.length)];
+                    if (rand < 0.5) emoji = emojis[Math.floor(Math.random() * emojis.length)];
+                    else if (rand < 0.65) emoji = bonusEmojis[Math.floor(Math.random() * bonusEmojis.length)];
+                    else if (rand < 0.8) emoji = penaltyEmojis[Math.floor(Math.random() * penaltyEmojis.length)];
+                    else if (rand < 0.9) emoji = endGameEmojis[Math.floor(Math.random() * endGameEmojis.length)];
+                    else emoji = Object.keys(specialEmojis)[Math.floor(Math.random() * Object.keys(specialEmojis).length)];
                     dot.innerText = emoji;
 
                     if (gameMode === 'adventure') {
@@ -278,7 +469,6 @@
                         }
                     }
 
-                    // Make penalty and end-game emojis disappear after 3 seconds
                     if (penaltyEmojis.includes(emoji) || endGameEmojis.includes(emoji)) {
                         setTimeout(() => {
                             if (dot.parentNode) dot.remove();
@@ -304,10 +494,10 @@
                 document.getElementById("score").innerText = score;
                 createExplosionEffect(this);
                 this.remove();
-            } else if (emoji === "🤨") {
-                triggerRainbowEffect();
-                score += 10;
+            } else if (specialEmojis[emoji]) {
+                score += specialEmojis[emoji].points;
                 document.getElementById("score").innerText = score;
+                specialEmojis[emoji].effect();
                 createExplosionEffect(this);
                 this.remove();
             } else if (bonusEmojis.includes(emoji)) {
@@ -330,25 +520,20 @@
             }
         }
 
-        function startGame(mode) {
-            document.getElementById("gameOverScreen").classList.add("hidden"); // Ensure game over screen is hidden
+        function startGame() {
             const customTime = document.getElementById("timeInput").value;
-            timeLeft = mode === 'adventure' ? Infinity : customTime;
-            gameMode = mode;
+            timeLeft = gameMode === 'adventure' ? Infinity : customTime;
             level = 1;
 
-            if (mode !== 'adventure' && timeLeft < 1) {
+            if (gameMode !== 'adventure' && timeLeft < 1) {
                 alert("Time must be at least 1 second, champ!");
                 return;
             }
 
-            score = 0;
-            document.getElementById("score").innerText = score;
-            document.getElementById("timer").innerText = mode === 'adventure' ? "∞" : timeLeft;
             gameActive = true;
             spawnEmojis();
 
-            if (mode !== 'adventure') {
+            if (gameMode !== 'adventure') {
                 countdown = setInterval(() => {
                     timeLeft--;
                     document.getElementById("timer").innerText = timeLeft;
@@ -387,16 +572,15 @@
             }
             document.getElementById("gameOverScreen").classList.remove("hidden");
             document.getElementById("highScore").innerText = highScore;
-            document.body.classList.remove('warning', 'rainbow');
-            document.getElementById("giant-sus").classList.add("hidden");
-            giantSusActive = false;
-            clearFallingEmojis();
-            clearLargeEmojis();
+            document.body.classList.remove('warning', 'gold');
         }
 
         function restartGame() {
             document.getElementById("gameOverScreen").classList.add("hidden");
-            startGame(gameMode);
+            score = 0;
+            document.getElementById("score").innerText = score;
+            document.getElementById("timer").innerText = gameMode === 'adventure' ? "∞" : document.getElementById("timeInput").value;
+            startGame();
         }
 
         function createExplosionEffect(dot) {
@@ -423,46 +607,47 @@
             explodeSound.play();
         }
 
-        function triggerRainbowEffect() {
-            document.body.classList.add("rainbow");
-            const giantSus = document.getElementById("giant-sus");
-            giantSus.classList.remove("hidden");
-            giantSusActive = true;
-            spawnFallingEmojis();
-            spawnLargeEmojis();
-            setTimeout(() => {
-                document.body.classList.remove("rainbow");
-                giantSus.classList.add("hidden");
-                giantSusActive = false;
-                clearFallingEmojis();
-                clearLargeEmojis();
-            }, 5000);
-        }
-
-        function spawnFallingEmojis() {
-            const susEmojis = ["🍑", "🫦", "💦", "🍒", "🍌", "🍆"];
+        function triggerGoldRush() {
+            document.body.classList.add("gold");
+            const valuableEmojis = ["💎", "💰", "💵"];
             for (let i = 0; i < 30; i++) {
                 const emoji = document.createElement("div");
                 emoji.classList.add("falling-emoji");
-                emoji.innerText = susEmojis[Math.floor(Math.random() * susEmojis.length)];
+                emoji.innerText = valuableEmojis[Math.floor(Math.random() * valuableEmojis.length)];
                 emoji.style.left = `${Math.random() * 100}vw`;
                 emoji.style.animationDelay = `${Math.random() * 1}s`;
                 document.body.appendChild(emoji);
                 setTimeout(() => emoji.remove(), 2000);
             }
+            setTimeout(() => document.body.classList.remove("gold"), 5000);
         }
 
-        function spawnLargeEmojis() {
-            const susEmojis = ["🍑", "🫦", "💦", "🍒", "🍌", "🍆"];
-            for (let i = 0; i < 10; i++) {
-                const emoji = document.createElement("div");
-                emoji.classList.add("large-emoji");
-                emoji.innerText = susEmojis[Math.floor(Math.random() * susEmojis.length)];
-                emoji.style.left = `${Math.random() * 80 + 10}vw`;
-                emoji.style.top = `${Math.random() * 80 + 10}vh`;
-                document.body.appendChild(emoji);
-                setTimeout(() => emoji.remove(), 3000);
-            }
+        function triggerRainbowEffect() {
+            document.body.style.background = "linear-gradient(45deg, red, orange, yellow, green, blue, purple)";
+            setTimeout(() => {
+                document.body.style.background = "linear-gradient(135deg, #282c34, #1a1e25)";
+            }, 5000);
+        }
+
+        function triggerLightning() {
+            document.body.style.background = "linear-gradient(135deg, #000, #fff)";
+            setTimeout(() => {
+                document.body.style.background = "linear-gradient(135deg, #282c34, #1a1e25)";
+            }, 100);
+            setTimeout(() => {
+                document.body.style.background = "linear-gradient(135deg, #000, #fff)";
+            }, 200);
+            setTimeout(() => {
+                document.body.style.background = "linear-gradient(135deg, #282c34, #1a1e25)";
+            }, 300);
+        }
+
+        function triggerSpinEffect() {
+            document.body.style.transition = "transform 2s ease";
+            document.body.style.transform = "rotate(360deg)";
+            setTimeout(() => {
+                document.body.style.transform = "rotate(0deg)";
+            }, 2000);
         }
 
         function clearFallingEmojis() {
@@ -472,18 +657,6 @@
         function clearLargeEmojis() {
             document.querySelectorAll(".large-emoji").forEach(emoji => emoji.remove());
         }
-
-        document.getElementById("giant-sus").addEventListener("click", function() {
-            if (giantSusActive) {
-                if (this.innerText === "🤨") {
-                    this.innerText = "😩";
-                }
-                score += 5;
-                document.getElementById("score").innerText = score;
-                const clickSound = document.getElementById("clickSound");
-                clickSound.play();
-            }
-        });
     </script>
 </body>
 </html>
